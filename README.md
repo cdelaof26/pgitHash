@@ -1,6 +1,8 @@
 # pgitHash
 
+
 ### What is it?
+
 pseudo git hasher (or short pgitHash), is a small utility to create a .xlsx database to *track files*.
 
 pgitHash is meant to help with manual backups.
@@ -20,6 +22,7 @@ change to your backup drive.
 
 
 ### What it does?
+
 Given a path, explores and creates hashes for all files found, then writes all data to databaseN.xlsx file:
 
 Database1 | [ b1 ]
@@ -30,9 +33,9 @@ Hash | Path
 9db2348a1b4126ebcaacc8cf74197b70 | /Path/To/File3
 ... | ...
 
-Once you have one, you can re-run pgithash to get another .xlsx file (usually some time after).
+Once you have one, you can re-run pgitHash to get another .xlsx file (usually after some time).
 
-Database2 | b2
+Database2 | [ b2 ]
 --- | ---
 Hash | Path
 1c1c96fd2cf8330db0bfa936ce82f3b9 | /Path/To/File2
@@ -40,9 +43,9 @@ Hash | Path
 aa874662b131efc7bb49a57fceaf61ae | /Path/To/File4
 ... | ...
 
-With two or more databases you can compare them and obtain their differences like, created, deleted, renamed and changed files.
+With two databases you can compare them and obtain their differences like, created, deleted, renamed and changed files.
 
-Database | differences of b2 (newer) and b1 (older) | . 
+Database | differences of b1 (older) and b2 (newer) | . 
 --- | --- | ---
 Hash | Path | Notes
 4acc8e0d6e2084a8e32af7050071eba9 | /Path/To/File1 | Deleted
@@ -54,11 +57,31 @@ aa874662b131efc7bb49a57fceaf61ae | /Path/To/File4 | Added
 Unlike git, **pgitHash can't revert changes to an older version.**
 Instead, psgitHash will _"push"_ all changes to the backup disk.
 
+
+### Run pgitHash
+
+1. Install Python >= 3.6
+2. Clone repo `git clone https://github.com/cdelaof26/pgitHash`
+3. Install dependencies `pip install -r requirements.txt`
+   > Usually is `pip3 install -r requirements.txt` instead of `pip`
+4. Run with `python main.py` or `python3 main.py`
+
+
+### Know issues
+pgitHash can't track moved files
+
 ### To do
-- [x] Add potato license
+- [x] Add license
 - [x] Write README
 - [x] Write _pseudo-database creation_ functionality
-- [ ] Write _pseudo-database comparison_ functionality
+- [x] Write _pseudo-database comparison_ functionality
 - [ ] Write _apply changes_ functionality
-- [ ] Add dependencies installer
+- [x] ~~Add dependencies installer~~ Added `requirements.txt`
+- [ ] Add _create tree_ functionality to track files moved
+- [ ] Add _switchable hash algorithm_ functionality
 - [ ] Profit???
+
+
+### License
+
+pgitHash is licensed under the MIT license, as included in the [LICENSE](LICENSE) file.

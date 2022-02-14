@@ -1,4 +1,5 @@
 from tools.lang import ITEM_NOT_FOUND
+from tools.lang import CANNOT_READ_DIRECTORY
 from tools.lang import FILES_AT
 from tools.lang import DIRECTORIES_AT
 from tools.lang import FILES_AND_DIRECTORIES_AT
@@ -7,16 +8,9 @@ from tools.lang import SELECT_AN_OPTION
 from tools.lang import DO_YOU_WANT_TO_MOVE_OR_SELECT_IT
 from tools.lang import PATH_DOESNT_EXIST
 
-from time import sleep
 from pathlib import Path
 
 # General utilities
-
-
-def check_dependencies():
-    #try:
-    #    import
-    print()
 
 
 current_directory = Path.cwd()
@@ -72,6 +66,7 @@ def create_selectable_list(items) -> list:
     # ...
     # 100. Option 100
     longer_number = search_longer_item(list(range(len(items)))) + 1  # +1 because extra space after dot
+    # forgive god for the above line
 
     for option, value in enumerate(items):
         option = str(option)
@@ -84,27 +79,43 @@ def create_selectable_list(items) -> list:
     return [printable_list, options]
 
 
-# Input:  Path, bool, bool, bool -> Path("/home/cdelaof/"), False
-# Output: list                   -> ['.zprofile', 'Desktop', 'Documents', 'Downloads']
+# Input:  Path, bool, bool, bool, list -> Path("/home/cdelaof/"), False
+# Output: list                         -> ['.zprofile', 'Desktop', 'Documents', 'Downloads']
 #
-def retrieve_files_and_directories(path, retrieve_full_path, allow_files=True, allow_directories=True) -> list:
+def retrieve_files_and_directories(path,
+                                   retrieve_full_path,
+                                   allow_files=True,
+                                   allow_directories=True,
+                                   allowed_extensions=None) -> list:
     items_found = list()
 
-    for item in path.iterdir():
-        if retrieve_full_path:
-            if allow_files and allow_directories:
-                items_found.append(item.resolve())
-            elif allow_files and item.is_file():
-                items_found.append(item.resolve())
-            elif item.is_dir():
-                items_found.append(item.resolve())
-        else:
-            if allow_files and allow_directories:
-                items_found.append(item.name)
-            elif allow_files and item.is_file():
-                items_found.append(item.name)
-            elif item.is_dir():
-                items_found.append(item.name)
+    try:
+        for item in path.iterdir():
+            # If there is any only-allowed extension
+            # verifies if a file is allowed
+            if allowed_extensions is not None and \
+                    item.suffix not in allowed_extensions and \
+                    not item.is_dir():
+                continue
+
+            if retrieve_full_path:
+                if allow_files and allow_directories:
+                    items_found.append(item.resolve())
+                elif allow_files and item.is_file():
+                    items_found.append(item.resolve())
+                elif item.is_dir():
+                    items_found.append(item.resolve())
+            else:
+                if allow_files and allow_directories:
+                    items_found.append(item.name)
+                elif allow_files and item.is_file():
+                    items_found.append(item.name)
+                elif item.is_dir():
+                    items_found.append(item.name)
+    except (PermissionError, FileNotFoundError) as e:
+        print(CANNOT_READ_DIRECTORY % str(path))
+        print(e)
+        print()
 
     return items_found
 
@@ -113,7 +124,7 @@ def retrieve_files_and_directories(path, retrieve_full_path, allow_files=True, a
 # User_input: int        -> 0
 # Output:     Path       -> "/path/to/selected/file1"
 #
-def file_browser(allow_files=True, allow_directories=True):
+def file_browser(allow_files=True, allow_directories=True, allowed_extensions=None) -> Path:
     global current_directory
 
     if allow_files and allow_directories:
@@ -128,8 +139,11 @@ def file_browser(allow_files=True, allow_directories=True):
             current_directory = current_directory.parent
 
         print("\n" + title % str(current_directory))
-        sleep(0.2)
-        items = retrieve_files_and_directories(current_directory, False, allow_files, allow_directories)
+        items = retrieve_files_and_directories(current_directory,
+                                               False,
+                                               allow_files,
+                                               True,
+                                               allowed_extensions)
         items += [GO_BACK]
 
         printable_list, options = create_selectable_list(items)
@@ -162,9 +176,14 @@ def file_browser(allow_files=True, allow_directories=True):
                 current_directory = usr_path
 
             if current_directory.is_file():
-                # Select if it's file
+                # Select automatically if it's a file
                 return current_directory
 
+            if current_directory.is_dir() and not allow_directories:
+                # If directories can't be selected, moves into automatically
+                continue
+
+            # If directories are allowed, prompt will ask if move into or select it
             print(DO_YOU_WANT_TO_MOVE_OR_SELECT_IT)
             if choose(["1", "2"], [False, True]):
                 # Select it
@@ -172,5 +191,4 @@ def file_browser(allow_files=True, allow_directories=True):
         elif option == options[-1]:
             current_directory = current_directory.parent
         else:
-            print(PATH_DOESNT_EXIST)
-
+            print(PATH_DOESNT_EXIST % (allow_files, allow_directories))
