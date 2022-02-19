@@ -25,9 +25,9 @@ change to your backup drive.
 
 Given a path, explores and creates hashes for all files found, then writes all data to databaseN.xlsx file:
 
-Database1 | [ b1 ]
---- | ---
-Hash | Path
+Database1 | [ b1 ] | .
+--- | --- | ---
+Hash | Path | Common parent: Path_name
 4acc8e0d6e2084a8e32af7050071eba9 | /Path/To/File1
 136b4753c38a7606c243cec3cfa15316 | /Path/To/File2
 9db2348a1b4126ebcaacc8cf74197b70 | /Path/To/File3
@@ -35,9 +35,9 @@ Hash | Path
 
 Once you have one, you can re-run pgitHash to get another .xlsx file (usually after some time).
 
-Database2 | [ b2 ]
---- | ---
-Hash | Path
+Database2 | [ b2 ] | .
+--- | --- | ---
+Hash | Path | Common parent: Path_name
 1c1c96fd2cf8330db0bfa936ce82f3b9 | /Path/To/File2
 9db2348a1b4126ebcaacc8cf74197b70 | /Path/To/file3
 aa874662b131efc7bb49a57fceaf61ae | /Path/To/File4
@@ -67,18 +67,18 @@ Instead, psgitHash will _"push"_ all changes to the backup disk.
 4. Run with `python main.py` or `python3 main.py`
 
 
-### Know issues
-pgitHash can't track moved files
-
 ### To do
 - [x] Add license
 - [x] Write README
 - [x] Write _pseudo-database creation_ functionality
 - [x] Write _pseudo-database comparison_ functionality
 - [ ] Write _apply changes_ functionality
-- [x] ~~Add dependencies installer~~ Added `requirements.txt`
-- [ ] Add _create tree_ functionality to track files moved
+- [x] ~~Add dependencies installer~~ 
+  - Added `requirements.txt`
+- [x] ~~Add _create tree_ functionality to track files moved~~
+  - Comparison of parents by given path
 - [ ] Add _switchable hash algorithm_ functionality
+- [ ] Add JSON language files
 - [ ] Profit???
 
 

@@ -1,6 +1,6 @@
 # Object to save hash and path
 
-STATS = ["Created", "Deleted", "Renamed", "Modified", "Moved"]
+STATS = ["Created", "Deleted", "Renamed", "Modified", "Moved", "RenamedAndMoved", "ModifiedAndMoved"]
 
 
 class FileHash:
@@ -11,6 +11,9 @@ class FileHash:
 
     def get_file_path(self):
         return self.file_path
+
+    def set_file_path(self, file_path):
+        self.file_path = file_path
 
     def get_file_hash(self) -> str:
         return self.file_hash

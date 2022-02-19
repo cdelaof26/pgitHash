@@ -26,6 +26,7 @@ while True:
     if operation == "1":
         # Create p-database
         directories, pdb_path, explore_subdirectories = setup_pdb_creation()
+        common_parent = directories[0].name
         files = list()
 
         while directories:
@@ -35,7 +36,7 @@ while True:
         if not files:
             print(NOT_FILES_FOUND)
         else:
-            workbook = create_workbook(["Hash", "File_path"])
+            workbook = create_workbook(["Hash", "File_path", "Common_parent: " + common_parent])
             sheet = workbook.active
 
             for i, file in enumerate(files):
@@ -51,10 +52,10 @@ while True:
         # Compare p-databases
         older_db, newer_db, cdb_path = setup_pdb_comparison()
 
-        older_db_data = retrieve_workbook_objects(["Hash", "File_path"], older_db)
-        newer_db_data = retrieve_workbook_objects(["Hash", "File_path"], newer_db)
+        older_db_data, older_db_parent = retrieve_workbook_objects(["Hash", "File_path"], older_db, True)
+        newer_db_data, newer_db_parent = retrieve_workbook_objects(["Hash", "File_path"], newer_db, True)
 
-        cdb_data = compare_data(older_db_data, newer_db_data)
+        cdb_data = compare_data(older_db_data, newer_db_data, older_db_parent, newer_db_parent)
 
         if not cdb_data:
             print(NOT_FILES_FOUND)

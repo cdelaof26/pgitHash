@@ -10,6 +10,9 @@ from tools.lang import PATH_DOESNT_EXIST
 
 from pathlib import Path
 
+from sys import stdout
+from os import get_terminal_size
+
 # General utilities
 
 
@@ -135,8 +138,10 @@ def file_browser(allow_files=True, allow_directories=True, allowed_extensions=No
         title = DIRECTORIES_AT
 
     while True:
-        if current_directory.is_file():
+        if current_directory.exists() and current_directory.is_file():
             current_directory = current_directory.parent
+        elif not current_directory.exists():
+            current_directory = Path.cwd()
 
         print("\n" + title % str(current_directory))
         items = retrieve_files_and_directories(current_directory,
@@ -156,8 +161,12 @@ def file_browser(allow_files=True, allow_directories=True, allowed_extensions=No
         verified = option in options
 
         if not verified:
-            # Needed to remove Darwin '\' as well any extra space
-            option = option.replace("\\", "").strip()
+            # Needed to remove Darwin '\' for spaced directories
+            if Path.anchor == "/":
+                option = option.replace("\\", "")
+
+            # Removes any space at start or end
+            option = option.strip()
 
             tmp_path = Path(option)
             item_exist = tmp_path.exists()
@@ -187,8 +196,41 @@ def file_browser(allow_files=True, allow_directories=True, allowed_extensions=No
             print(DO_YOU_WANT_TO_MOVE_OR_SELECT_IT)
             if choose(["1", "2"], [False, True]):
                 # Select it
-                return current_directory
+                if current_directory.exists():
+                    return current_directory
+
+                # If somehow it disappears, user is told about that
+                print(PATH_DOESNT_EXIST % (allow_files, allow_directories))
         elif option == options[-1]:
             current_directory = current_directory.parent
         else:
             print(PATH_DOESNT_EXIST % (allow_files, allow_directories))
+
+
+# Input: str, str -> "Exploring %a", "/path/to/dir/"
+# print: str      -> Exploring ... h/to/dir/
+#
+# Notes: msg_constant should include 1 %a for formatting
+#
+def print_status(msg_constant, org_text):
+    columns = get_terminal_size()[0]
+    principal_text = str(org_text)
+    full_msg_len = len(msg_constant % principal_text)
+    append_three_dots = full_msg_len > columns
+
+    # three dots are only appended if message len is greater than terminal columns
+    while full_msg_len + 4 > columns:  # +4 because "... " will be appended
+        principal_text = principal_text[1:]
+        full_msg_len -= 1
+
+    if append_three_dots:
+        msg = msg_constant % ("... " + principal_text)
+    else:
+        msg = msg_constant % principal_text
+
+    extra_space = columns - len(msg)
+    msg += (" " * extra_space)
+
+    stdout.write("\r")
+    stdout.write(msg)
+    stdout.flush()

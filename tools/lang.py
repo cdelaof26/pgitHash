@@ -56,4 +56,8 @@ CANNOT_HASH_FILE = "\nERROR; Cannot hash %a"
 EXPLORING_DIR = "Exploring %a"
 CANNOT_READ_DIRECTORY = "ERROR; Cannot read contents of %a"
 
-XLSX_DOESNT_MEET_COLUMNS = "File %a doesn't meet the columns %a"
+XLSX_DOESNT_MEET_COLUMNS = "File %a doesn't meet the columns %a\n" \
+                           "Common parent found: %a"
+
+PROCESSED = "Processed %a"
+M_FILES_OF_N_FILES = "%a files of %a"

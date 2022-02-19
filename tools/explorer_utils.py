@@ -8,19 +8,20 @@ from tools.lang import CANNOT_HASH_FILE
 from tools.lang import EXPLORING_DIR
 from tools.lang import CANNOT_READ_DIRECTORY
 from tools.lang import XLSX_DOESNT_MEET_COLUMNS
+from tools.lang import PROCESSED
+from tools.lang import M_FILES_OF_N_FILES
 
 from tools.FileHash import FileHash
 from tools.FileHash import STATS
 
 from tools.util import file_browser
 from tools.util import choose
+from tools.util import print_status
 
 from pathlib import Path
 
 from hashlib import sha1
 # from hashlib import md5
-from sys import stdout
-from os import get_terminal_size
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
@@ -95,27 +96,8 @@ def get_file_hash(file_path):
 # Notes: Uses reference
 #
 def explore_dir(directories, files, explore_subdirectories):
-    columns = get_terminal_size()[0]
-    directory_path = str(directories[0])
-    directory_len = len(EXPLORING_DIR % directory_path)
-    append_three_dots = directory_len > columns
-
-    while directory_len + 4 > columns:  # +4 because "... " will be appended
-        directory_path = directory_path[1:]
-        directory_len -= 1
-
-    if append_three_dots:
-        msg = EXPLORING_DIR % ("... " + directory_path)
-    else:
-        msg = EXPLORING_DIR % directory_path
-
-    extra_space = columns - len(msg)
-    msg += (" " * extra_space)
-
     # I think it's a lot of processing just to display it nicely, maybe I will change it.
-    stdout.write("\r")
-    stdout.write(msg)
-    stdout.flush()
+    print_status(EXPLORING_DIR, directories[0])
 
     try:
         for item in directories[0].iterdir():
@@ -150,7 +132,7 @@ def create_workbook(columns) -> Workbook:
 #                        <tools.FileHash.FileHash object at [...]>,
 #                        ...]
 #
-def retrieve_workbook_objects(columns, file_path) -> list:
+def retrieve_workbook_objects(columns, file_path, retrieve_common_parent) -> list:
     try:
         workbook = load_workbook(file_path, True)
     except BadZipFile:
@@ -161,12 +143,30 @@ def retrieve_workbook_objects(columns, file_path) -> list:
     matched_columns = True
 
     files = list()
+    common_parent = None
 
     for column, column_name in enumerate(columns):
         matched_columns = matched_columns and (sheet.cell(row=1, column=(column + 1)).value == column_name)
 
+    # Common parent is only available for p-databases
+    # cp-databases uses column 3 for file_stat
+    if retrieve_common_parent:
+        # Basically does this:
+        #       "Common_parent: Path_name".split(": ")
+        #       ['Common_parent', 'Path_name']
+        # If path common_parent_split[1] is found, then is retrieved
+        #
+        common_parent_split = sheet.cell(row=1, column=3).value
+        common_parent_split = common_parent_split.split(": ")
+        if len(common_parent_split) == 2:
+            common_parent = common_parent_split[1]
+        else:
+            # If is needed common_parent but not found, then file
+            # Doesn't meet the columns
+            matched_columns = False
+
     if not matched_columns:
-        print(XLSX_DOESNT_MEET_COLUMNS % (file_path, columns))
+        print(XLSX_DOESNT_MEET_COLUMNS % (file_path, columns, common_parent is not None))
         workbook.close()
         return files
 
@@ -179,6 +179,9 @@ def retrieve_workbook_objects(columns, file_path) -> list:
 
         files.append(FileHash(file_path, file_hash, file_stat))
 
+    if retrieve_common_parent:
+        return [files, common_parent]
+
     return files
 
 
@@ -187,33 +190,71 @@ def retrieve_workbook_objects(columns, file_path) -> list:
 #
 # Notes: example in README
 #
-def compare_data(older_db_data, newer_db_data) -> list:
+def compare_data(older_db_data, newer_db_data, older_db_parent, newer_db_parent) -> list:
     cdb_data = list()
 
+    old_parent_p_tmp = str(older_db_data[0].get_file_path())
+    old_parent_index = old_parent_p_tmp.index(older_db_parent)
+    # Removes path after the common parent
+    old_parent = old_parent_p_tmp.replace(old_parent_p_tmp[old_parent_index:], "")
+
+    files_processed = 1
+    total_files = len(older_db_data)
+
     while older_db_data:
+        print_status(PROCESSED, M_FILES_OF_N_FILES % (files_processed, total_files))
+
         old_data = older_db_data[0]
         remove_old_data_from_list = False
+
+        old_data_p_tmp = str(old_data.get_file_path())
+        old_data_p_index = old_data_p_tmp.index(older_db_parent)
+        # Removes path before the common parent
+        old_data_parent = old_data_p_tmp.replace(old_data_p_tmp[:old_data_p_index], "")
+        # Removes filename
+        old_data_parent = old_data_parent.replace(Path(old_data.get_file_path()).stem, "")
 
         for i_new_data, new_data in enumerate(newer_db_data):
             same_names = Path(old_data.get_file_path()).stem == Path(new_data.get_file_path()).stem
 
+            new_data_p_tmp = str(new_data.get_file_path())
+            new_data_p_index = new_data_p_tmp.index(newer_db_parent)
+            # Removes path before the common parent
+            new_data_parent = new_data_p_tmp.replace(new_data_p_tmp[:new_data_p_index], "")
+            # Removes filename
+            new_data_parent = new_data_parent.replace(Path(new_data.get_file_path()).stem, "")
+
+            same_path = old_data_parent == new_data_parent
+
             # If hashes are the same
             if old_data.get_file_hash() == new_data.get_file_hash():
 
-                if not same_names:
-                    # If hashes are the same but the names are not, is considered as renamed
+                if same_names and not same_path:
+                    # If hashes and names are the same but parents not, is considered as moved
+                    old_data.set_file_stat(STATS[4])
+                    cdb_data.append(old_data)
+                if not same_names and same_path:
+                    # If hashes and parents are the same but the names are not, is considered as renamed
                     old_data.set_file_stat(STATS[2])
                     cdb_data.append(old_data)
+                if not same_names and not same_path:
+                    # If hashes are the same but names and parents are not, is considered as RenamedAndMoved
+                    old_data.set_file_stat(STATS[5])
+                    cdb_data.append(old_data)
 
-                # If hashes and names are the same is considered as unmodified
+                # If hashes, parents and names are the same is considered as unmodified
                 # so, not added to list of differences
 
                 newer_db_data.pop(i_new_data)
                 remove_old_data_from_list = True
                 break
             elif same_names:
-                # If hashes are not the same, but name is, then is considered as modified
-                old_data.set_file_stat(STATS[3])
+                if same_path:
+                    # If hashes are not the same, but parents and names are, then is considered as modified
+                    old_data.set_file_stat(STATS[3])
+                else:
+                    # If hashes and parents are not the same, but names are, then is considered as ModifiedAndMoved
+                    old_data.set_file_stat(STATS[6])
 
                 cdb_data.append(old_data)
                 newer_db_data.pop(i_new_data)
@@ -227,10 +268,23 @@ def compare_data(older_db_data, newer_db_data) -> list:
 
         # Removes old files
         older_db_data.pop(0)
+        files_processed += 1
 
     # Any non-deleted file on newer data is considered as created
     while newer_db_data:
-        newer_db_data[0].set_file_stat(STATS[0])
+        new_data = newer_db_data[0]
+
+        # To push changes is needed change the path to the older one
+        new_data_p_tmp = str(new_data.get_file_path())
+        new_data_p_index = new_data_p_tmp.index(newer_db_parent)
+        # Removes path before the common parent
+        new_data_parent = new_data_p_tmp.replace(new_data_p_tmp[:new_data_p_index], "")
+        # Changes appends old path after common parent
+        new_data_parent = old_parent + new_data_parent
+
+        new_data.set_file_stat(STATS[0])
+        new_data.set_file_path(new_data_parent)
+
         cdb_data.append(newer_db_data[0])
 
         newer_db_data.pop(0)
