@@ -72,7 +72,7 @@ Instead, psgitHash will _"push"_ all changes to the backup disk.
 - [x] Write README
 - [x] Write _pseudo-database creation_ functionality
 - [x] Write _pseudo-database comparison_ functionality
-- [ ] Write _apply changes_ functionality
+- [X] Write _apply changes_ functionality
 - [x] ~~Add dependencies installer~~ 
   - Added `requirements.txt`
 - [x] ~~Add _create tree_ functionality to track files moved~~

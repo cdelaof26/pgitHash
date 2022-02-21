@@ -1,5 +1,5 @@
 from tools.lang import ITEM_NOT_FOUND
-from tools.lang import CANNOT_READ_DIRECTORY
+from tools.lang import CANNOT_READ_CONTENTS
 from tools.lang import FILES_AT
 from tools.lang import DIRECTORIES_AT
 from tools.lang import FILES_AND_DIRECTORIES_AT
@@ -7,11 +7,14 @@ from tools.lang import GO_BACK
 from tools.lang import SELECT_AN_OPTION
 from tools.lang import DO_YOU_WANT_TO_MOVE_OR_SELECT_IT
 from tools.lang import PATH_DOESNT_EXIST
+from tools.lang import CANNOT_COPY_OR_MOVE_FILE
 
 from pathlib import Path
 
 from sys import stdout
 from os import get_terminal_size
+
+from subprocess import call
 
 # General utilities
 
@@ -83,7 +86,7 @@ def create_selectable_list(items) -> list:
 
 
 # Input:  Path, bool, bool, bool, list -> Path("/home/cdelaof/"), False
-# Output: list                         -> ['.zprofile', 'Desktop', 'Documents', 'Downloads']
+# Output: list                         -> ['.bash', 'Desktop', 'Documents', 'Downloads']
 #
 def retrieve_files_and_directories(path,
                                    retrieve_full_path,
@@ -116,7 +119,7 @@ def retrieve_files_and_directories(path,
                 elif item.is_dir():
                     items_found.append(item.name)
     except (PermissionError, FileNotFoundError) as e:
-        print(CANNOT_READ_DIRECTORY % str(path))
+        print(CANNOT_READ_CONTENTS % str(path))
         print(e)
         print()
 
@@ -162,7 +165,7 @@ def file_browser(allow_files=True, allow_directories=True, allowed_extensions=No
 
         if not verified:
             # Needed to remove Darwin '\' for spaced directories
-            if Path.anchor == "/":
+            if Path.cwd().anchor == "/":
                 option = option.replace("\\", "")
 
             # Removes any space at start or end
@@ -234,3 +237,39 @@ def print_status(msg_constant, org_text):
     stdout.write("\r")
     stdout.write(msg)
     stdout.flush()
+
+
+# Input: Path
+#
+def create_directory(dir_path) -> bool:
+    return call("mkdir %a" % str(dir_path), shell=True) == 0
+
+
+# Input: Path
+#
+def create_directories(final_path):
+    last_path = final_path
+    while not final_path.exists():
+        if create_directory(last_path):
+            last_path = final_path
+        else:
+            last_path = last_path.parent
+
+
+# Input: Path, Path
+#
+def copy_file(file_path, destiny_dir, move_file=False):
+    # Command for Darwin and Linux
+    if Path.cwd().anchor == "/":
+        if not move_file:
+            result = call("cp %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+        else:
+            result = call("mv %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+    else:
+        if not move_file:
+            result = call("copy %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+        else:
+            result = call("move %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+
+    if result != 0:
+        print(CANNOT_COPY_OR_MOVE_FILE % (str(file_path), str(destiny_dir)))

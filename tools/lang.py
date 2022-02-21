@@ -6,7 +6,12 @@
 WHAT_DO_YOU_WANT_TO_DO = "What do you want to do?"
 SELECT_AN_OPTION = "Select an option"
 
-SUCCEED = "\nSucceed"
+WHAT_DO_YOU_WANT_TO_DO = "What do you want to do?"
+
+DO_YOU_WANT_PROCEED = "THIS PROCESS WILL MODIFY SEVERAL DATA\n" \
+                      "Do you want proceed?\n" \
+                      "1. Yes\n" \
+                      "2. No"
 
 # main
 
@@ -17,10 +22,6 @@ MENU = "Main menu\n" \
        "2. Compare databases\n" \
        "3. Apply found changes\n" \
        "E. Exit"
-
-FILE_CREATED_AT = ", file created at %a\n"
-
-NOT_FILES_FOUND = "\nNo files were found at given path, process ended\n"
 
 
 # util
@@ -50,14 +51,25 @@ ENTER_A_NAME_FOR_YOUR_DB = "Enter a name for your database\n> "
 SELECT_THE_OLDER_BD = "Select the older database file"
 SELECT_THE_NEWER_BD = "Select the newer database file"
 ENTER_A_NAME_FOR_YOUR_CDB = "Enter a name for your comparison-result database\n> "
+SELECT_THE_CDB = "Select the comparison database file"
 
 CANNOT_HASH_FILE = "\nERROR; Cannot hash %a"
 
 EXPLORING_DIR = "Exploring %a"
-CANNOT_READ_DIRECTORY = "ERROR; Cannot read contents of %a"
+CANNOT_READ_CONTENTS = "ERROR; Cannot read contents of %a"
+
+SUCCEED = "\nSucceed"
 
 XLSX_DOESNT_MEET_COLUMNS = "File %a doesn't meet the columns %a\n" \
                            "Common parent found: %a"
 
+FILE_CREATED_AT = ", file created at %a\n"
+NOT_FILES_FOUND = "\nNo files were found at given path, process ended\n"
+
+CREATING = "Creating %a"
+M_OBJECTS_OF_N_OBJECTS = "%a objects of %a"
+
 PROCESSED = "Processed %a"
 M_FILES_OF_N_FILES = "%a files of %a"
+
+CANNOT_COPY_OR_MOVE_FILE = "ERROR; Cannot copy or move file %a to %a"

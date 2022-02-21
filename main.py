@@ -1,19 +1,21 @@
 from tools.lang import WELCOME
 from tools.lang import MENU
 from tools.lang import WHAT_DO_YOU_WANT_TO_DO
-from tools.lang import SUCCEED
-from tools.lang import FILE_CREATED_AT
-from tools.lang import NOT_FILES_FOUND
+from tools.lang import DO_YOU_WANT_PROCEED
 
 from tools.util import choose
 
 from tools.explorer_utils import setup_pdb_creation
 from tools.explorer_utils import explore_dir
-from tools.explorer_utils import create_workbook
+from tools.explorer_utils import write_xlsx
 
 from tools.explorer_utils import setup_pdb_comparison
 from tools.explorer_utils import retrieve_workbook_objects
 from tools.explorer_utils import compare_data
+
+from tools.explorer_utils import setup_ach_comparison
+from tools.explorer_utils import retrieve_workbook_common_parent
+from tools.explorer_utils import apply_changes
 
 
 print(WELCOME)
@@ -33,21 +35,7 @@ while True:
             explore_dir(directories, files, explore_subdirectories)
         print()
 
-        if not files:
-            print(NOT_FILES_FOUND)
-        else:
-            workbook = create_workbook(["Hash", "File_path", "Common_parent: " + common_parent])
-            sheet = workbook.active
-
-            for i, file in enumerate(files):
-                # i + 2 since first row is for column labels
-                sheet.cell(row=(i + 2), column=1, value=file.get_file_hash())
-                sheet.cell(row=(i + 2), column=2, value=file.get_file_path())
-
-            workbook.save(pdb_path)
-            workbook.close()
-
-            print(SUCCEED + FILE_CREATED_AT % str(pdb_path))
+        write_xlsx(["Hash", "File_path", "Common_parent: " + common_parent], files, pdb_path)
     elif operation == "2":
         # Compare p-databases
         older_db, newer_db, cdb_path = setup_pdb_comparison()
@@ -55,27 +43,22 @@ while True:
         older_db_data, older_db_parent = retrieve_workbook_objects(["Hash", "File_path"], older_db, True)
         newer_db_data, newer_db_parent = retrieve_workbook_objects(["Hash", "File_path"], newer_db, True)
 
-        cdb_data = compare_data(older_db_data, newer_db_data, older_db_parent, newer_db_parent)
-
-        if not cdb_data:
-            print(NOT_FILES_FOUND)
-        else:
-            workbook = create_workbook(["Hash", "File_path", "Notes"])
-            sheet = workbook.active
-
-            for i, file in enumerate(cdb_data):
-                # i + 2 since first row is for column labels
-                sheet.cell(row=(i + 2), column=1, value=str(file.get_file_hash()))
-                sheet.cell(row=(i + 2), column=2, value=str(file.get_file_path()))
-                sheet.cell(row=(i + 2), column=3, value=str(file.get_file_stat()))
-
-            workbook.save(cdb_path)
-            workbook.close()
-
-            print(SUCCEED + FILE_CREATED_AT % str(cdb_path))
+        if older_db_data and newer_db_data:
+            cdb_data = compare_data(older_db_data, newer_db_data, older_db_parent, newer_db_parent)
+            write_xlsx(["Hash", "File_path", "Notes"], cdb_data, cdb_path)
     elif operation == "3":
         # Apply changes
-        print("WIB")
+        older_db, newer_db, cdb_path = setup_ach_comparison()
+
+        old_db_parent = retrieve_workbook_common_parent(None, older_db)[0]  # This method returns a list
+        newer_db_data, newer_db_parent = retrieve_workbook_objects(["Hash", "File_path"], newer_db, True)
+
+        cdb_data = retrieve_workbook_objects(["Hash", "File_path", "Notes"], cdb_path, False)
+
+        if cdb_data:
+            print(DO_YOU_WANT_PROCEED)
+            if choose(["1", "2"], [True, False]):
+                apply_changes(cdb_data, newer_db_data, newer_db_parent, old_db_parent)
     elif operation == "E":
         # Exit
         break

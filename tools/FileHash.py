@@ -1,6 +1,12 @@
 # Object to save hash and path
 
-STATS = ["Created", "Deleted", "Renamed", "Modified", "Moved", "RenamedAndMoved", "ModifiedAndMoved"]
+FILE_MOVED = "Moved"
+FILE_CREATED = "Created"
+FILE_DELETED = "Deleted"
+FILE_RENAMED = "Renamed"
+FILE_MODIFIED = "Modified"
+FILE_RENAMED_AND_MOVED = "RenamedAndMoved"
+FILE_MODIFIED_AND_MOVED = "ModifiedAndMoved"
 
 
 class FileHash:
