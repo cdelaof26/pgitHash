@@ -5,7 +5,6 @@ from tools.lang import SELECT_THE_OLDER_BD
 from tools.lang import SELECT_THE_NEWER_BD
 from tools.lang import ENTER_A_NAME_FOR_YOUR_CDB
 from tools.lang import SELECT_THE_CDB
-from tools.lang import CANNOT_HASH_FILE
 from tools.lang import EXPLORING_DIR
 from tools.lang import CANNOT_READ_CONTENTS
 from tools.lang import SUCCEED
@@ -26,16 +25,17 @@ from tools.FileHash import FILE_MODIFIED
 from tools.FileHash import FILE_RENAMED_AND_MOVED
 from tools.FileHash import FILE_MODIFIED_AND_MOVED
 
-from tools.util import file_browser
 from tools.util import choose
 from tools.util import print_status
-from tools.util import create_directories
-from tools.util import copy_file
+
+from tools.file_utils import file_browser
+
+from tools.file_utils import create_directories
+from tools.file_utils import copy_file
+
+from tools.file_utils import create_file_hash
 
 from pathlib import Path
-
-from hashlib import sha1
-# from hashlib import md5
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
@@ -43,8 +43,6 @@ from openpyxl import load_workbook
 from zipfile import BadZipFile
 
 # Utilities related to exploration of filesystem and creation of pseudo databases
-
-BUFFER_SIZE = 65536
 
 
 # User_input: Path, bool, str -> "/home", True, "db"
@@ -95,46 +93,23 @@ def setup_ach_comparison() -> list:
     return [older_pdb, newer_pdb, comparison_pdb_path]
 
 
-# Input:  str ; "/Users/cdelaof/Desktop/hello.txt"
-# Output: str ; 5d41402abc4b2a76b9719d911017c592
-#
-def get_file_hash(file_path):
-    global BUFFER_SIZE
-
-    # if hash_func == "md5":
-    #    func = md5()
-    # else:
-    func = sha1()
-
-    try:
-        with open(file_path, 'rb') as f:
-            while True:
-                data = f.read(BUFFER_SIZE)
-                if not data:
-                    break
-                func.update(data)
-        return str("{0}".format(func.hexdigest()))
-    except (FileNotFoundError, PermissionError) as e:
-        print(CANNOT_HASH_FILE % str(file_path))
-        print(e)
-        print()
-        return ""
-
-
 # Input: list, list, bool
 #
 # Notes: Uses reference
 #
-def explore_dir(directories, files, explore_subdirectories):
+def explore_dir(directories, files, explore_subdirectories, hash_func, blacklist_extensions):
     # I think it's a lot of processing just to display it nicely, maybe I will change it.
     print_status(EXPLORING_DIR, directories[0])
 
     try:
         for item in directories[0].iterdir():
+            if item.name in blacklist_extensions or item.suffix in blacklist_extensions:
+                continue
+
             if explore_subdirectories and item.is_dir():
                 directories.append(item)
             elif item.is_file():
-                file_hash = get_file_hash(item)
+                file_hash = create_file_hash(item, hash_func)
                 files.append(FileHash(str(item), file_hash))
     except (PermissionError, FileNotFoundError) as e:
         print(CANNOT_READ_CONTENTS % str(directories[0]))
@@ -303,7 +278,7 @@ def compare_data(older_db_data, newer_db_data, older_db_parent, newer_db_parent)
         for i_new_data, new_data in enumerate(newer_db_data):
             same_names = Path(old_data.get_file_path()).stem == Path(new_data.get_file_path()).stem
 
-            # Code explanation at line 291
+            # Code explanation at line 263
             new_data_parent = str(new_data.get_file_path()).split(newer_db_parent)[1]
             # Removes file name
             new_data_parent = new_data_parent.replace(new_data.get_file_path().name, "")
@@ -376,25 +351,31 @@ def compare_data(older_db_data, newer_db_data, older_db_parent, newer_db_parent)
     return cdb_data
 
 
+# Input: str, list
+#
 def search_file_by_hash(file_hash, data) -> FileHash:
     for dat in data:
         if dat.get_file_hash() == file_hash:
             return dat
 
 
+# Input: str, list
+#
 def search_file_by_name(file_name, data) -> FileHash:
     for dat in data:
         if dat.get_file_path().name == file_name:
             return dat
 
 
+# Input: Path, str, list, Path, Path
+#
 def move_file(old_file_path, old_file_hash, newer_db_data, newer_db_parent, old_db_parent, search_by_hash=True):
     if search_by_hash:
         new_file = search_file_by_hash(old_file_hash, newer_db_data)
     else:
         new_file = search_file_by_name(old_file_hash, newer_db_data)
 
-    # Code explanation at line 291
+    # Code explanation at line 263
     # To join it, it can't start with / or \, that's what [1:]
     new_parent = (str(new_file.get_file_path()).split(newer_db_parent)[1])[1:]
     # Removes file name
@@ -405,16 +386,14 @@ def move_file(old_file_path, old_file_hash, newer_db_data, newer_db_parent, old_
 
     new_path = Path(old_file_parent).joinpath(old_db_parent, new_parent)
 
-    print("Create directory", str(new_path))
-    print("Old part", old_file_parent)
-    print("New part", new_parent)
-
     create_directories(new_path)
 
     copy_file(old_file_path, new_path, move_file=True)
     newer_db_data.remove(new_file)
 
 
+# Input: Path, list
+#
 def delete_and_copy_file(old_file_path, newer_db_data, delete_data=True):
     if old_file_path.exists():
         old_file_path.unlink()
@@ -426,6 +405,7 @@ def delete_and_copy_file(old_file_path, newer_db_data, delete_data=True):
             newer_db_data.remove(new_file)
 
 
+# Input: list, list, Path, Path
 # Too way complicated, sorry
 #
 def apply_changes(cdb_data, newer_db_data, newer_db_parent, old_db_parent):

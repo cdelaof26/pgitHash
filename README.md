@@ -77,7 +77,8 @@ Instead, psgitHash will _"push"_ all changes to the backup disk.
   - Added `requirements.txt`
 - [x] ~~Add _create tree_ functionality to track files moved~~
   - Comparison of parents by given path
-- [ ] Add _switchable hash algorithm_ functionality
+- [X] Add _ignore files_ functionality
+- [X] Add _switchable hash algorithm_ functionality
 - [ ] Add JSON language files
 - [ ] Profit???
 

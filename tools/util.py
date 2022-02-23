@@ -1,25 +1,14 @@
 from tools.lang import ITEM_NOT_FOUND
-from tools.lang import CANNOT_READ_CONTENTS
-from tools.lang import FILES_AT
-from tools.lang import DIRECTORIES_AT
-from tools.lang import FILES_AND_DIRECTORIES_AT
-from tools.lang import GO_BACK
-from tools.lang import SELECT_AN_OPTION
-from tools.lang import DO_YOU_WANT_TO_MOVE_OR_SELECT_IT
-from tools.lang import PATH_DOESNT_EXIST
-from tools.lang import CANNOT_COPY_OR_MOVE_FILE
 
-from pathlib import Path
+from tools.lang import SELECT_AN_OPTION
+
+from tools.lang import PRESS_CTRL_C_TO_EXIT
+from tools.lang import ENTERED_ITEMS
 
 from sys import stdout
 from os import get_terminal_size
 
-from subprocess import call
-
 # General utilities
-
-
-current_directory = Path.cwd()
 
 
 # Input:      list, list -> ["1", "2", "A"], [True, False, 10]
@@ -85,131 +74,6 @@ def create_selectable_list(items) -> list:
     return [printable_list, options]
 
 
-# Input:  Path, bool, bool, bool, list -> Path("/home/cdelaof/"), False
-# Output: list                         -> ['.bash', 'Desktop', 'Documents', 'Downloads']
-#
-def retrieve_files_and_directories(path,
-                                   retrieve_full_path,
-                                   allow_files=True,
-                                   allow_directories=True,
-                                   allowed_extensions=None) -> list:
-    items_found = list()
-
-    try:
-        for item in path.iterdir():
-            # If there is any only-allowed extension
-            # verifies if a file is allowed
-            if allowed_extensions is not None and \
-                    item.suffix not in allowed_extensions and \
-                    not item.is_dir():
-                continue
-
-            if retrieve_full_path:
-                if allow_files and allow_directories:
-                    items_found.append(item.resolve())
-                elif allow_files and item.is_file():
-                    items_found.append(item.resolve())
-                elif item.is_dir():
-                    items_found.append(item.resolve())
-            else:
-                if allow_files and allow_directories:
-                    items_found.append(item.name)
-                elif allow_files and item.is_file():
-                    items_found.append(item.name)
-                elif item.is_dir():
-                    items_found.append(item.name)
-    except (PermissionError, FileNotFoundError) as e:
-        print(CANNOT_READ_CONTENTS % str(path))
-        print(e)
-        print()
-
-    return items_found
-
-
-# Input:      bool, bool -> True, False
-# User_input: int        -> 0
-# Output:     Path       -> "/path/to/selected/file1"
-#
-def file_browser(allow_files=True, allow_directories=True, allowed_extensions=None) -> Path:
-    global current_directory
-
-    if allow_files and allow_directories:
-        title = FILES_AND_DIRECTORIES_AT
-    elif allow_files:
-        title = FILES_AT
-    else:
-        title = DIRECTORIES_AT
-
-    while True:
-        if current_directory.exists() and current_directory.is_file():
-            current_directory = current_directory.parent
-        elif not current_directory.exists():
-            current_directory = Path.cwd()
-
-        print("\n" + title % str(current_directory))
-        items = retrieve_files_and_directories(current_directory,
-                                               False,
-                                               allow_files,
-                                               True,
-                                               allowed_extensions)
-        items += [GO_BACK]
-
-        printable_list, options = create_selectable_list(items)
-
-        print(printable_list)
-        print(SELECT_AN_OPTION)
-        option = input("> ")
-        usr_path = None
-
-        verified = option in options
-
-        if not verified:
-            # Needed to remove Darwin '\' for spaced directories
-            if Path.cwd().anchor == "/":
-                option = option.replace("\\", "")
-
-            # Removes any space at start or end
-            option = option.strip()
-
-            tmp_path = Path(option)
-            item_exist = tmp_path.exists()
-
-            verified = (item_exist and tmp_path.is_file() and allow_files) or \
-                       (item_exist and tmp_path.is_dir() and allow_directories)
-
-            if verified:
-                usr_path = tmp_path
-
-        if verified and option != options[-1]:
-            if usr_path is None:
-                option_value = items[int(option)]
-                current_directory = current_directory.joinpath(option_value)
-            else:
-                current_directory = usr_path
-
-            if current_directory.is_file():
-                # Select automatically if it's a file
-                return current_directory
-
-            if current_directory.is_dir() and not allow_directories:
-                # If directories can't be selected, moves into automatically
-                continue
-
-            # If directories are allowed, prompt will ask if move into or select it
-            print(DO_YOU_WANT_TO_MOVE_OR_SELECT_IT)
-            if choose(["1", "2"], [False, True]):
-                # Select it
-                if current_directory.exists():
-                    return current_directory
-
-                # If somehow it disappears, user is told about that
-                print(PATH_DOESNT_EXIST % (allow_files, allow_directories))
-        elif option == options[-1]:
-            current_directory = current_directory.parent
-        else:
-            print(PATH_DOESNT_EXIST % (allow_files, allow_directories))
-
-
 # Input: str, str -> "Exploring %a", "/path/to/dir/"
 # print: str      -> Exploring ... h/to/dir/
 #
@@ -239,37 +103,40 @@ def print_status(msg_constant, org_text):
     stdout.flush()
 
 
-# Input: Path
+# Input:      list -> ["a", "b", "c"],
+# User_input: str  -> "1"
 #
-def create_directory(dir_path) -> bool:
-    return call("mkdir %a" % str(dir_path), shell=True) == 0
-
-
-# Input: Path
+# Notes: Uses reference
 #
-def create_directories(final_path):
-    last_path = final_path
-    while not final_path.exists():
-        if create_directory(last_path):
-            last_path = final_path
-        else:
-            last_path = last_path.parent
+def select_and_delete_items_from_list(items):
+    print(PRESS_CTRL_C_TO_EXIT)
+
+    try:
+        while True:
+            printable_list, options = create_selectable_list(items)
+            print(printable_list)
+            print(SELECT_AN_OPTION)
+            item = choose(options, items)
+
+            items.remove(item)
+    except KeyboardInterrupt:
+        pass
 
 
-# Input: Path, Path
+# Input:      str
+# User_input: str  -> "a", "b", "c"
+# Output:     list -> ["a", "b", "c"]
 #
-def copy_file(file_path, destiny_dir, move_file=False):
-    # Command for Darwin and Linux
-    if Path.cwd().anchor == "/":
-        if not move_file:
-            result = call("cp %a %a" % (str(file_path), str(destiny_dir)), shell=True)
-        else:
-            result = call("mv %a %a" % (str(file_path), str(destiny_dir)), shell=True)
-    else:
-        if not move_file:
-            result = call("copy %a %a" % (str(file_path), str(destiny_dir)), shell=True)
-        else:
-            result = call("move %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+def create_user_list() -> list:
+    print(PRESS_CTRL_C_TO_EXIT)
+    items = list()
+    try:
+        while True:
+            print(ENTERED_ITEMS % len(items))
+            item = input("> ").strip()
+            if item == "":
+                continue
 
-    if result != 0:
-        print(CANNOT_COPY_OR_MOVE_FILE % (str(file_path), str(destiny_dir)))
+            items.append(item)
+    except KeyboardInterrupt:
+        return items
