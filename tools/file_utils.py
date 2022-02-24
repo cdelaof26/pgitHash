@@ -38,7 +38,7 @@ def read_file(file_path):
     try:
         with open(file_path, "r") as file:
             return file.read()
-    except (UnicodeDecodeError, NotADirectoryError, FileNotFoundError, PermissionError):
+    except (UnicodeDecodeError, IsADirectoryError, FileNotFoundError, PermissionError):
         return ""
 
 
@@ -49,7 +49,7 @@ def write_file(file_path, data):
     try:
         with open(file_path, "w") as file:
             return file.write(data)
-    except (NotADirectoryError, FileNotFoundError, PermissionError):
+    except (IsADirectoryError, FileNotFoundError, PermissionError):
         return False
 
 

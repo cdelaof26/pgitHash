@@ -31,7 +31,7 @@ OPERATION_CANCELED = "\n\n      Operation canceled\n\n"
 # config manager
 
 SETTINGS_SAVED = "\nSettings saved"
-CANNOT_SAVE_SETTINGS = "\nERROR; Cannot save Settings"
+CANNOT_SAVE_SETTINGS = "\nERROR; Cannot save settings"
 
 INVALID_SETTINGS = "Invalid settings, default loaded"
 
