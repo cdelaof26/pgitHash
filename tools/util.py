@@ -1,7 +1,5 @@
 from tools.lang import ITEM_NOT_FOUND
-
 from tools.lang import SELECT_AN_OPTION
-
 from tools.lang import PRESS_CTRL_C_TO_EXIT
 from tools.lang import ENTERED_ITEMS
 
@@ -69,7 +67,7 @@ def create_selectable_list(items) -> list:
         options.append(option)
 
         spaces = " " * (longer_number - len(option))
-        printable_list += option + "." + spaces + ("%a\n" % str(value))
+        printable_list += option + "." + spaces + ("\"{0}\"\n".format(str(value)))
 
     return [printable_list, options]
 
@@ -82,7 +80,7 @@ def create_selectable_list(items) -> list:
 def print_status(msg_constant, org_text):
     columns = get_terminal_size()[0]
     principal_text = str(org_text)
-    full_msg_len = len(msg_constant % principal_text)
+    full_msg_len = len(msg_constant.format(principal_text))
     append_three_dots = full_msg_len > columns
 
     # three dots are only appended if message len is greater than terminal columns
@@ -91,9 +89,9 @@ def print_status(msg_constant, org_text):
         full_msg_len -= 1
 
     if append_three_dots:
-        msg = msg_constant % ("... " + principal_text)
+        msg = msg_constant.format("... " + principal_text)
     else:
-        msg = msg_constant % principal_text
+        msg = msg_constant.format(principal_text)
 
     extra_space = columns - len(msg)
     msg += (" " * extra_space)

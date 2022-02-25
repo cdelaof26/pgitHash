@@ -20,6 +20,8 @@ MENU = "\nMain menu\n" \
        "4. Hash single file\n\n" \
        "S. Settings"
 
+CANNOT_CREATE_DIR = "Cannot create directory %a"
+
 DO_YOU_WANT_PROCEED = "THIS PROCESS WILL MODIFY SEVERAL DATA\n" \
                       "Do you want proceed?\n" \
                       "1. Yes\n" \
@@ -90,6 +92,8 @@ PATH_DOESNT_EXIST = "Given path/file doesn't exist or it is not allowed to be us
 
 SELECT_THE_DIRECTORY = "Select the directory"
 DO_YOU_WANT_EXPLORE_SUBDIRECTORIES = "Do you want to explore subdirectories?\n1. Yes\n2. No"
+DO_YOU_WANT_SPLIT_THE_DB_BY_DIRECTORY = "Do you want to create a xlsx file for each directory?\n1. Yes\n2. No"
+
 
 ENTER_A_NAME_FOR_YOUR_DB = "Enter a name for your database\n> "
 
@@ -98,20 +102,26 @@ SELECT_THE_NEWER_BD = "Select the newer database file"
 ENTER_A_NAME_FOR_YOUR_CDB = "Enter a name for your comparison result database\n> "
 SELECT_THE_CDB = "Select the comparison database file"
 
-EXPLORING_DIR = "Exploring %a"
+EXPLORING_DIR = "Exploring {0}"
 
 SUCCEED = "\nSucceed"
+
+CANNOT_WRITE_FILE = "Cannot write file %a\nReason %a\n\nRetry?\n1. Yes\n2. No"
 
 XLSX_DOESNT_MEET_COLUMNS = "File %a doesn't meet the columns %a\n" \
                            "Common parent found: %a"
 
-FILE_CREATED_AT = ", file created at %a\n"
+FILE_CREATED_AT = ", file created at {0}\n"
 NOT_FILES_FOUND = "\nNo files were found at given path, process ended\n"
 
-CREATING = "Creating %a"
-M_OBJECTS_OF_N_OBJECTS = "%a objects of %a"
+CREATING = "Creating {0}"
+M_OBJECTS_OF_N_OBJECTS = "{0} objects of {1}"
 
-PROCESSED = "Processed %a"
-M_FILES_OF_N_FILES = "%a files of %a"
+BAD_DB_ORDER = "Old and new xlsx files are flipped or they are not for the same backup, process ended"
+
+PROCESSED = "Processed {0}"
+M_FILES_OF_N_FILES = "{0} files of {1}"
+
+FILE_NOT_FOUND = "File with hash or name %a was not found under the newer data"
 
 CANNOT_COPY_OR_MOVE_FILE = "ERROR; Cannot copy or move file %a to %a"

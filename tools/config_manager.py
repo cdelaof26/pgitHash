@@ -1,8 +1,6 @@
 from tools.lang import SETTINGS_SAVED
 from tools.lang import CANNOT_SAVE_SETTINGS
-
 from tools.lang import INVALID_SETTINGS
-
 from tools.lang import SETTINGS_MENU
 from tools.lang import SETUP_BLACKLIST
 from tools.lang import ENABLE_BLACKLIST
@@ -18,12 +16,9 @@ from tools.lang import MODIFY_BLACKLIST_MENU
 from tools.lang import SELECT_ITEMS_TO_DELETE
 
 from tools.file_utils import read_file
-
 from tools.file_utils import write_file
 from tools.file_utils import create_directory
-
 from tools.file_utils import choose
-
 from tools.file_utils import create_selectable_list
 
 from tools.util import create_user_list

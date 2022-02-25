@@ -215,7 +215,16 @@ def file_browser(allow_files=True, allow_directories=True, allowed_extensions=No
 # Input: Path
 #
 def create_directory(dir_path) -> bool:
-    return call("mkdir %a" % str(dir_path), shell=True) == 0
+    # Using format by %a and % doesn't work for unicode characters
+    # That's why is needed use {0} and .format()
+    # return call("mkdir %a" % str(dir_path), shell=True) == 0
+
+    # mkdir will break since \" is used
+    # Without \" names with space would be taken as two parameters
+    # Use ' instead could solve it, but it's more common than ", so above problem will happened as well
+    dir_path = str(dir_path).replace("\"", "\\\"")
+
+    return call("mkdir \"{0}\"".format(dir_path), shell=True) == 0
 
 
 # Input: Path
@@ -235,14 +244,14 @@ def copy_file(file_path, destiny_dir, move_file=False):
     # Command for Darwin and Linux
     if Path.cwd().anchor == "/":
         if not move_file:
-            result = call("cp %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+            result = call("cp \"{0}\" \"{1}\"".format(str(file_path), str(destiny_dir)), shell=True)
         else:
-            result = call("mv %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+            result = call("mv \"{0}\" \"{1}\"".format(str(file_path), str(destiny_dir)), shell=True)
     else:
         if not move_file:
-            result = call("copy %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+            result = call("copy \"{0}\" \"{1}\"".format(str(file_path), str(destiny_dir)), shell=True)
         else:
-            result = call("move %a %a" % (str(file_path), str(destiny_dir)), shell=True)
+            result = call("move \"{0}\" \"{1}\"".format(str(file_path), str(destiny_dir)), shell=True)
 
     if result != 0:
         print(CANNOT_COPY_OR_MOVE_FILE % (str(file_path), str(destiny_dir)))
