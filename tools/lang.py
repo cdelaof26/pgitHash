@@ -17,7 +17,9 @@ MENU = "\nMain menu\n" \
        "1. Create database\n" \
        "2. Compare databases\n" \
        "3. Apply found changes\n" \
-       "4. Hash single file\n\n" \
+       "4. Hash single file\n" \
+       "5. Modify origin path on\n" \
+       "   existent xlsx\n\n" \
        "S. Settings"
 
 CANNOT_CREATE_DIR = "Cannot create directory %a"
@@ -67,6 +69,10 @@ ITEM_NOT_FOUND = "Your option %a is not in list, try any of those: %a"
 PRESS_CTRL_C_TO_EXIT = "Press ctrl + c to exit"
 ENTERED_ITEMS = "Entered items %a"
 
+ENTER_THE_TEXT_TO_REPLACE = "Enter the text to replace\n> "
+ENTER_THE_REPLACEMENT_TEXT = "Enter replacement\n> "
+ARE_THE_REPLACEMENTS_OKAY = "Are the replacements okay?\n1. Yes\n2. No\n3. Let me modify it"
+
 
 # file utils
 
@@ -112,7 +118,7 @@ XLSX_DOESNT_MEET_COLUMNS = "File %a doesn't meet the columns %a\n" \
                            "Common parent found: %a"
 
 FILE_CREATED_AT = ", file created at {0}\n"
-NOT_FILES_FOUND = "\nNo files were found at given path, process ended\n"
+NOT_FILES_FOUND = "\nNo files or data were found at given path or file, process ended\n"
 
 CREATING = "Creating {0}"
 M_OBJECTS_OF_N_OBJECTS = "{0} objects of {1}"

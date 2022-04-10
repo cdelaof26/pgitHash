@@ -80,7 +80,8 @@ Instead, psgitHash will _"push"_ all changes to the backup disk.
 - [x] Add _ignore files_ functionality
 - [x] Add _switchable hash algorithm_ functionality
 - [x] Add _divide by directory_ functionality
-- [ ] Add _compare multiple db_ functionality
+- [ ] ~~Add _compare multiple db_ functionality~~
+  - There is no reason to do that
 - [ ] Add JSON language files
 - [ ] Profit???
 

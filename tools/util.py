@@ -2,9 +2,15 @@ from tools.lang import ITEM_NOT_FOUND
 from tools.lang import SELECT_AN_OPTION
 from tools.lang import PRESS_CTRL_C_TO_EXIT
 from tools.lang import ENTERED_ITEMS
+from tools.lang import ENTER_THE_TEXT_TO_REPLACE
+from tools.lang import ENTER_THE_REPLACEMENT_TEXT
+from tools.lang import ARE_THE_REPLACEMENTS_OKAY
 
 from sys import stdout
 from os import get_terminal_size
+
+from random import random
+from re import sub
 
 # General utilities
 
@@ -121,7 +127,6 @@ def select_and_delete_items_from_list(items):
         pass
 
 
-# Input:      str
 # User_input: str  -> "a", "b", "c"
 # Output:     list -> ["a", "b", "c"]
 #
@@ -138,3 +143,55 @@ def create_user_list() -> list:
             items.append(item)
     except KeyboardInterrupt:
         return items
+
+
+# Input:  int -> 10
+# Output: int -> 3
+#
+def get_random_number(limit):
+    return int(random() * limit)
+
+
+# Input:      list, str
+# User_input: str
+# Output:     list
+#
+def regex_replace(five_elements_on_data, origin_path) -> list:
+    proceed_to_apply_changes = False
+
+    while True:
+        print("\n" + origin_path)
+
+        text_to_replace = input(ENTER_THE_TEXT_TO_REPLACE)
+        replacement = input(ENTER_THE_REPLACEMENT_TEXT)
+
+        if text_to_replace == "" or replacement == "":
+            break
+
+        print(str(origin_path) + " -> " + str(sub(text_to_replace, replacement, origin_path)))
+        for element in five_elements_on_data:
+            print(str(element.get_file_path()) + " -> " + sub(text_to_replace, replacement, str(element.get_file_path())))
+
+        print("\n" + ARE_THE_REPLACEMENTS_OKAY)
+        option = choose(["1", "2", "3"])
+        if option == "1":
+            proceed_to_apply_changes = True
+            break
+        elif option == "2":
+            break
+
+    if proceed_to_apply_changes:
+        return [text_to_replace, replacement]
+    return ["", ""]
+
+
+def replace_all_coincidences_on_data(db_data, origin_path, text_to_replace, replacement) -> list:
+    origin_path = sub(text_to_replace, replacement, origin_path)
+    i = 0
+    while i < len(db_data):
+        original_element_path = str(db_data[i].get_file_path())
+        modified_element_path = sub(text_to_replace, replacement, original_element_path)
+        db_data[i].set_file_path(modified_element_path)
+        i += 1
+
+    return [db_data, origin_path]

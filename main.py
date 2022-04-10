@@ -8,10 +8,15 @@ from tools.lang import SELECT_A_FILE
 from tools.lang import OPERATION_CANCELED
 
 from tools.util import choose
+from tools.util import get_random_number
+from tools.util import regex_replace
+from tools.util import replace_all_coincidences_on_data
 
 from tools.file_utils import file_browser
 from tools.file_utils import create_file_hash
 from tools.file_utils import create_directory
+from tools.file_utils import create_directories
+from tools.file_utils import copy_file
 
 from tools.explorer_utils import setup_pdb_creation
 from tools.explorer_utils import explore_dir
@@ -24,6 +29,8 @@ from tools.explorer_utils import compare_data
 from tools.explorer_utils import setup_ach_comparison
 from tools.explorer_utils import retrieve_workbook_origin_path
 from tools.explorer_utils import apply_changes
+
+from tools.explorer_utils import setup_cp
 
 from tools.config_manager import retrieve_config
 from tools.config_manager import settings_menu
@@ -44,7 +51,7 @@ while True:
         print(MENU)
         print(EXIT)
         print(WHAT_DO_YOU_WANT_TO_DO)
-        operation = choose(["1", "2", "3", "4", "S", "E"])
+        operation = choose(["1", "2", "3", "4", "5", "S", "CP", "E"])
 
         if operation == "1":
             # Create p-database
@@ -122,9 +129,43 @@ while True:
             hash_func = config[HASH_ALGORITHM]
             print(hash_func, create_file_hash(file_path, hash_func))
 
+        elif operation == "5":
+            # Modify origin path on existent xlsx
+            print(SELECT_A_FILE)
+            file_path = file_browser(allow_directories=False, allowed_extensions=[".xlsx"])
+            db_data, db_origin_path = retrieve_workbook_objects(["Hash", "File_path"], file_path, True)
+            limit = len(db_data)
+            random_data_elements = [db_data[get_random_number(limit)], db_data[get_random_number(limit)],
+                                    db_data[get_random_number(limit)], db_data[get_random_number(limit)],
+                                    db_data[get_random_number(limit)]]
+            text_to_replace, replacement = regex_replace(random_data_elements, db_origin_path)
+
+            if text_to_replace != "":
+                db_data, db_origin_path = replace_all_coincidences_on_data(db_data, db_origin_path,
+                                                                           text_to_replace, replacement)
+                write_xlsx(["Hash", "File_path", "Origin_path: " + str(db_origin_path)], db_data, file_path)
+
         elif operation == "S":
             # Settings
             blacklist_str, config = settings_menu(config)
+
+        elif operation == "CP":
+            # Recursive copy, not listened
+            origin, destiny = setup_cp()
+            directories = [origin]
+            files = list()
+
+            while directories:
+                explore_dir(directories, files, True, None, blacklist_str)
+                for file in files:
+                    destiny_dir = file.get_file_path()
+                    destiny_dir = destiny_dir.replace(str(origin), str(destiny))
+                    destiny_dir = Path(destiny_dir).parent
+
+                    create_directories(destiny_dir)
+                    copy_file(file.get_file_path(), destiny_dir)
+                files = list()
+            print()
 
         elif operation == "E":
             # Exit

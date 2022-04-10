@@ -32,7 +32,7 @@ from pathlib import Path
 
 
 SETTINGS_FOLDER = Path.cwd().joinpath("settings")
-SETTINGS_FILE = SETTINGS_FOLDER.joinpath("settings.json")
+SETTINGS_FILE = SETTINGS_FOLDER.joinpath("settings")
 BLACKLIST_FILE_STR = SETTINGS_FOLDER.joinpath("blacklist")
 
 USE_BLACKLIST = False

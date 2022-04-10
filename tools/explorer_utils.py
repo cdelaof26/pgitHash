@@ -103,6 +103,17 @@ def setup_ach_comparison() -> list:
     return [older_pdb, newer_pdb, comparison_pdb_path]
 
 
+# cp
+def setup_cp() -> list:
+    print(SELECT_THE_DIRECTORY)
+    origin = file_browser(allow_files=False)
+
+    print(SELECT_THE_DIRECTORY)
+    destiny = file_browser(allow_files=False)
+
+    return [origin, destiny]
+
+
 # Input: list, list, bool
 #
 # Notes: Uses reference
@@ -124,7 +135,10 @@ def explore_dir(directories, files, explore_subdirectories, hash_func, blacklist
             if explore_subdirectories and item.is_dir():
                 directories.append(item)
             elif item.is_file():
-                file_hash = create_file_hash(item, hash_func)
+                file_hash = None
+                if hash_func is not None:
+                    file_hash = create_file_hash(item, hash_func)
+                
                 files.append(FileHash(str(item), file_hash))
     except (PermissionError, FileNotFoundError) as e:
         print(CANNOT_READ_CONTENTS % str(directories[0]))
@@ -479,6 +493,9 @@ def apply_changes(cdb_data, newer_db_data, newer_db_origin_path, older_db_origin
 
         if old_file_stat == FILE_CREATED:
             new_file = search_file_by_hash(old_file_hash, newer_db_data)
+            # Before copying it, is verified if parent exist
+            create_directories(old_file_path.parent)
+
             copy_file(new_file.get_file_path(), old_file_path.parent)
             if new_file.get_file_hash() != "":
                 newer_db_data.remove(new_file)
